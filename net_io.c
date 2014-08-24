@@ -732,6 +732,35 @@ int handleHTTPRequest(struct client *c, char *p) {
         snprintf(getFile, sizeof getFile, "%s/%s", HTMLPATH, url);
     }
 
+    if (strstr(url, "/newplane")) {
+        system("afplay ./public_html/newplane.wav");
+    }
+    
+    if (strstr(url, "/savesettings")) {
+        
+        FILE *f = fopen("public_html/settings.txt", "w");
+       
+        if (f == NULL)
+        {
+            printf("Error opening file!\n");
+            exit(1);
+        }
+       
+        char buf[255];
+        
+        strcpy(buf, &url[14]);
+        
+        char *ch;
+        ch = strtok(buf, "&");
+        
+        while (ch != NULL) {
+            fprintf(f, "%s&", ch);
+            ch = strtok(NULL, "&");
+        }
+        
+        fclose(f);
+    }
+    
     // Select the content to send, we have just two so far:
     // "/" -> Our google map application.
     // "/data.json" -> Our ajax request to update planes.

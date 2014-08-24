@@ -2,6 +2,11 @@
 	<head>
 		<link rel="stylesheet" type="text/css" href="style.css" />
 		<link rel="stylesheet" href="http://code.jquery.com/ui/1.10.3/themes/smoothness/jquery-ui.css" />
+
+		<!--<link rel="stylesheet" type="text/css" href="bootstrap/bootstrap.min.css">-->
+        <link rel="stylesheet" type="text/css" href="bootstrap/bootstrap-theme.min.css">
+        <link rel="stylesheet" type="text/css" href="bootstrap/docs.min.css">
+
 		<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
 		<script src="http://code.jquery.com/ui/1.10.3/jquery-ui.js"></script>
 		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?sensor=false&libraries=geometry"></script>
@@ -10,19 +15,45 @@
 		<script type="text/javascript" src="options.js"></script>
 		<script type="text/javascript" src="extension.js"></script>
 		<script type="text/javascript" src="script.js"></script>
+		<script type="text/javascript" src="utility.js"></script>
 		<script type="text/javascript" src="coolclock/excanvas.js"></script>
 		<script type="text/javascript" src="coolclock/coolclock.js"></script>
 		<script type="text/javascript" src="coolclock/moreskins.js"></script>
 	</head>
 	<body onload="initialize()">
-		<div id="dialog-modal" title="Basic modal dialog" style="display:none;">
-			<p>The settings feature is coming soon. Keep checking GitHub.</p>
+	
+		<div id="dialog-modal" title="Settings" style="display:none;">
+			
+			<fieldset><legend>Lines</legend>
+			<input type="radio" name="radLines" value="contrail">Show contrails<br>
+			<input type="radio" name="radLines" value="single">Show single line<br>
+			<input type="radio" name="radLines" value="none">None<br>
+		    <input type="checkbox" id="chkLinesRemain"> Lines remain on map forever<br>
+			</fieldset><br>
+			
+			<fieldset><legend>Misc</legend>
+			<input type="checkbox" id="chkCollapse"> Collapse sidebar on start<br>
+			<input type="checkbox" id="chkSound"> Play sound when mapping new plane<br>
+			</fieldset><br>
+			
+			<fieldset><legend>Map</legend>
+			<input type="checkbox" id="chkInfo"> Show info windows on map<br>
+            </fieldset><br>
+			
+			<input type="button" value="Save" onclick="saveSettings()">
 		</div>
+	
 		<div id="map_container">
 			<div id="map_canvas"></div>
 		</div>
 		<div id="sidebar_container">
 			<div id="sidebar_canvas">
+			    <input type='button' id='btnToggle' value='Toggle' onclick='toggleSideBar(this)'>
+			    <input type='button' value='Settings' onclick="showSettings()">
+			    
+                Settings
+                </button>
+
 				<div id="timestamps" style="align: center">
 					<table width="100%"><tr>
 						<td>Local Time</td>
@@ -59,5 +90,8 @@
             Please do not call the local authorities, they already know about it if it is valid squak.
 		</div>
 		<div id="container_splitter"></div>
+		<div>
+		<span id='sound'></span>
+		</div>
 	</body>
 </html>

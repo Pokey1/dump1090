@@ -5,7 +5,8 @@ function optionsInitalize() {
 	// Write your initalization here
 	// Gets called just before the 1-sec function call loop is setup
 	$( "#dialog-modal" ).dialog({
-		height: 140,
+		height: 400,
+		width: 400,
 		modal: true,
 		autoOpen: false,
 		closeOnEscape: false
@@ -15,3 +16,4 @@ function optionsInitalize() {
 function optionsModal() {
 	$( "#dialog-modal" ).dialog( "open");
 }
+

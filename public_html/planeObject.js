@@ -1,3 +1,6 @@
+var zoom = 8; //map zoom level
+var zoomDivisor = 14; //divisor for zoom level
+
 var planeObject = {
 	oldlat		: null,
 	oldlon		: null,
@@ -34,6 +37,14 @@ var planeObject = {
 	// When was this last updated?
 	updated		: null,
 	reapable	: false,
+	
+	//info from tail number - oink
+	equipment   : 'Boeing 727',    //aircraft type
+	age         : 13,       //age of aircraft in years
+	coachfare   : 499,      //cost to fly coach
+	ontimepct   : 63,       //on tiie percentage
+	lastseen    : 1,        //last seen in days 
+	infoWindow  : new google.maps.InfoWindow({content: this.equipment}),
 
 	// Appends data to the running track so we can get a visual tail on the plane
 	// Only useful for a long running browser session.
@@ -48,6 +59,10 @@ var planeObject = {
 			if (this.line) {
 				this.line.setMap(null);
 				this.line = null;
+			}
+			if (this.line2) {
+				this.line2.setMap(null);
+				this.line2 = null;
 			}
 		},
 
@@ -121,8 +136,15 @@ var planeObject = {
 	// TODO: Trigger actions of a selecting a plane
 	funcSelectPlane	: function(selectedPlane){
 			selectPlaneByHex(this.icao);
+			if(this.marker)
+			{
+			    if(this.marker.infoWindow) {
+			        this.marker.infoWindow.setPosition(this.marker.getPosition());
+                }
+            }
 		},
-
+	
+	
 	// Update our data
 	funcUpdateData	: function(data){
 			// So we can find out if we moved
@@ -149,11 +171,19 @@ var planeObject = {
 				this.reapable = true;
 				if (this.marker) {
 					this.marker.setMap(null);
+					if(this.marker.infoWindow) this.marker.infoWindow.close();
 					this.marker = null;
+					
 				}
-				if (this.line) {
-					this.line.setMap(null);
-					this.line = null;
+				if($('#chkLinesRemain').prop('checked') != true) {
+                    if (this.line) {
+                        this.line.setMap(null);
+                        this.line = null;
+                    }
+                    if (this.line2) {
+                        this.line2.setMap(null);
+                        this.line2 = null;
+                    }
 				}
 				if (SelectedPlane == this.icao) {
 					if (this.is_selected) {
@@ -187,9 +217,10 @@ var planeObject = {
 				// Right now we only care about lat/long, if alt is updated only, oh well
 				if ((changeLat == true) || (changeLon == true)) {
 					this.funcAddToTrack();
-					if (this.is_selected) {
+					//if (this.is_selected) { /* oink */
 						this.line = this.funcUpdateLines();
-					}
+						this.line2 = this.funcUpdateLines2();
+					//}
 				}
 				this.marker = this.funcUpdateMarker();
 				PlanesOnMap++;
@@ -209,19 +240,77 @@ var planeObject = {
 			if (this.marker) {
 				this.marker.setPosition(new google.maps.LatLng(this.latitude, this.longitude));
 				this.marker.setIcon(this.funcGetIcon());
+		
+                this.marker.icon.scale = zoom / zoomDivisor;
+	        	 
+				if(this.marker.infoWindow){
+				    this.marker.infoWindow.setPosition(this.marker.getPosition());
+				
+				    var html = '';
+				    
+				    if(this.flight.length > 0)
+				        html += 'Flight: ' + this.flight;
+				    
+				    if(this.altitude > 0) {
+				        if(html.length > 0) html += '<br>'; 
+				        html += 'Altitude: ' + this.altitude;
+				    }
+				    
+				    if(this.speed > 0)
+				        html += '<br>Speed: ' + this.speed + ' knots';
+				        
+				    $('#' + this.marker.icao).html(html);
+				    
+				    /*
+				    $('#info').html('Flight: ' + this.flight
+                         //+ '<br>Plan: DFW to SFO'
+                         //+ '<br>Equip: ' + this.equipment 
+                         + '<br>Altitude: ' + this.altitude
+                         + '<br>Speed: ' + this.speed + ' knots'
+                         //+ '<br>Fare: $499/$1999'
+                         //+ '<br>Late: 60 mins'
+                         + '</span>');
+                */
+                
+                }   
 			} else {
 				this.marker = new google.maps.Marker({
 					position: new google.maps.LatLng(this.latitude, this.longitude),
 					map: GoogleMap,
-					icon: this.funcGetIcon(),
-					visable: true
+					icon: this.funcGetIcon()
 				});
-
+				
+				
 				// This is so we can match icao address
 				this.marker.icao = this.icao;
 
-				// Trap clicks for this marker.
+                this.marker.infoWindow = new google.maps.InfoWindow();
+    			this.marker.infoWindow.open(GoogleMap);
+    			
+                var info = '<span id="' + this.marker.icao + '">Flight: ' + this.flight
+                         //+ '<br>Plan: DFW to SFO'
+                         //+ '<br>Equip: ' + this.equipment 
+                         + '<br>Altitude: ' + this.altitude + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
+                         + '<br>Speed: ' + this.speed + ' knots'
+                         //+ '<br>Fare: $499/$1999'
+                         //+ '<br>Late: 60 mins'
+                         + '</span>';
+            
+    			this.marker.infoWindow.setContent(info);
+
+             	// Trap clicks for this marker.
 				google.maps.event.addListener(this.marker, 'click', this.funcSelectPlane);
+				
+                google.maps.event.addListener(GoogleMap, 'zoom_changed', function(){
+                    zoom = GoogleMap.getZoom();
+                });
+                
+                this.marker.icon.scale = zoom / zoomDivisor;
+              
+				$.ajax({
+				    url: 'http://localhost:8080/newplane'
+				});
+							
 			}
 
 			// Setting the marker title
@@ -233,22 +322,68 @@ var planeObject = {
 			return this.marker;
 		},
 
-	// Update our planes tail line,
+        funcGetContrailAdj: function(){
+            if($('input[name="radLines"]:checked').val() != 'contrail') return 0;
+       
+            var adj = this.altitude * .0000001 + (zoom * .0001);
+            //console.log(this.flight + ' adj = ' + adj);
+            return adj;         
+        },
+
+
+
+    // Update our planes tail line,
 	// TODO: Make this multi colored based on options
 	//		altitude (default) or speed
 	funcUpdateLines: function() {
+			var adj = this.funcGetContrailAdj();
+		    
 			if (this.line) {
 				var path = this.line.getPath();
-				path.push(new google.maps.LatLng(this.latitude, this.longitude));
+		    	path.push(new google.maps.LatLng(this.latitude+adj, this.longitude+adj));
 			} else {
+                var coords = [new google.maps.LatLng(this.latitude+adj, this.longitude+adj)];
+	
+	            //var icon = this.funcGetIcon();
+	            
+	            var color = '#000000';
+	            
+	            if($('input[name="radLines"]:checked').val() == 'contrail') color = '#E0F5FF';
+                
 				this.line = new google.maps.Polyline({
-					strokeColor: '#000000',
+					strokeColor: color,
 					strokeOpacity: 1.0,
 					strokeWeight: 3,
 					map: GoogleMap,
-					path: this.trackline
+					//path: this.trackline
+					//geodesic: true,
+					path: coords
 				});
 			}
 			return this.line;
-		}
+		},
+		
+    funcUpdateLines2: function() {
+        if($('input[name="radLines"]:checked').val() != 'contrail') return;
+                
+        var adj = this.funcGetContrailAdj();
+		    
+        if (this.line2) {
+            var path = this.line2.getPath();
+            path.push(new google.maps.LatLng(this.latitude-adj, this.longitude-adj));
+        } else {
+			var coords = [new google.maps.LatLng(this.latitude-adj, this.longitude-adj)];
+			
+            this.line2 = new google.maps.Polyline({
+                strokeColor: '#E0F5FF',
+                strokeOpacity: 1.0,
+                strokeWeight: 3,
+                map: GoogleMap,
+                //geodesic: true,
+                //path: this.trackline
+                path: coords
+            });
+        }
+        return this.line2;
+    }
 };
