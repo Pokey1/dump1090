@@ -1,5 +1,4 @@
-var zoom = 8; //map zoom level
-var zoomDivisor = 14; //divisor for zoom level
+var zoom = 8; //map zoom level 8,9,10,11, etc. as you go in
 
 var planeObject = {
 	oldlat		: null,
@@ -122,10 +121,13 @@ var planeObject = {
 			// If we have not overwritten color by now, an extension still could but
 			// just keep on trucking.  :)
 
-			return {
+            var scale = $('#ddlMarkerScale').val();
+            if(scale == 'undefined') scale = .4;
+          
+          	return {
                 strokeWeight: (this.is_selected ? 2 : 1),
                 path:  "M 0,0 "+ baseSvg["planeData"],
-                scale: 0.4,
+                scale: scale,
                 fillColor: this.markerColor,
                 fillOpacity: 0.9,
                 anchor: new google.maps.Point(32, 32), // Set anchor to middle of plane.
@@ -235,14 +237,18 @@ var planeObject = {
 				this.vTrack = false;
 		},
 
+    funcSetMarkerScale: function() {
+    	this.marker.icon.scale = this.marker.icon.scale * zoom *.15;
+    },
+    
 	// Update our marker on the map
 	funcUpdateMarker: function() {
 			if (this.marker) {
 				this.marker.setPosition(new google.maps.LatLng(this.latitude, this.longitude));
 				this.marker.setIcon(this.funcGetIcon());
 		
-                this.marker.icon.scale = zoom / zoomDivisor;
-	        	 
+            	this.funcSetMarkerScale();
+              
 				if(this.marker.infoWindow){
 				    this.marker.infoWindow.setPosition(this.marker.getPosition());
 				
@@ -260,18 +266,6 @@ var planeObject = {
 				        html += '<br>Speed: ' + this.speed + ' knots';
 				        
 				    $('#' + this.marker.icao).html(html);
-				    
-				    /*
-				    $('#info').html('Flight: ' + this.flight
-                         //+ '<br>Plan: DFW to SFO'
-                         //+ '<br>Equip: ' + this.equipment 
-                         + '<br>Altitude: ' + this.altitude
-                         + '<br>Speed: ' + this.speed + ' knots'
-                         //+ '<br>Fare: $499/$1999'
-                         //+ '<br>Late: 60 mins'
-                         + '</span>');
-                */
-                
                 }   
 			} else {
 				this.marker = new google.maps.Marker({
@@ -280,7 +274,6 @@ var planeObject = {
 					icon: this.funcGetIcon()
 				});
 				
-				
 				// This is so we can match icao address
 				this.marker.icao = this.icao;
 
@@ -288,12 +281,8 @@ var planeObject = {
     			this.marker.infoWindow.open(GoogleMap);
     			
                 var info = '<span id="' + this.marker.icao + '">Flight: ' + this.flight
-                         //+ '<br>Plan: DFW to SFO'
-                         //+ '<br>Equip: ' + this.equipment 
                          + '<br>Altitude: ' + this.altitude + '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;'
                          + '<br>Speed: ' + this.speed + ' knots'
-                         //+ '<br>Fare: $499/$1999'
-                         //+ '<br>Late: 60 mins'
                          + '</span>';
             
     			this.marker.infoWindow.setContent(info);
@@ -304,13 +293,12 @@ var planeObject = {
                 google.maps.event.addListener(GoogleMap, 'zoom_changed', function(){
                     zoom = GoogleMap.getZoom();
                 });
-                
-                this.marker.icon.scale = zoom / zoomDivisor;
-              
+                     
+                this.funcSetMarkerScale();
+                         
 				$.ajax({
 				    url: 'http://localhost:8080/newplane'
 				});
-							
 			}
 
 			// Setting the marker title

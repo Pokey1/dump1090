@@ -1,6 +1,5 @@
 $(document).ready(function(){
     getSettings();
-    if($('#chkCollapse').val() == 'on') toggleSideBar(); 
 });
 
 function toggleSideBar(){
@@ -37,6 +36,7 @@ function saveSettings(){
     settings += '&chkSound=' + $('#chkSound').prop('checked');
     settings += '&chkInfo=' + $('#chkInfo').prop('checked');
     settings += '&chkLinesRemain=' + $('#chkLinesRemain').prop('checked');
+    settings += '&ddlMarkerScale=' + $('#ddlMarkerScale').val();
     
     $.ajax({
         url: "http://localhost:8080/savesettings" + settings,
@@ -62,16 +62,25 @@ function getSettings(){ //todo have server return json, even better use angularj
                 var data = parms[i];
                 var kvp = data.split('=');
         
-                if(kvp[0] != 'undefined'){
-                    if(kvp[0] == 'radLines')
+                 if(typeof(kvp[0]) != 'undefined') { 
+                    if(kvp[0].substring(0,3) == 'rad') {
                         $('input[name="radLines"][value="' + kvp[1] +'"]').prop('checked', true);
-                    if(kvp[1] == 'true')
-                        $('#' + kvp[0]).prop('checked', true);
-                    if(kvp[1] == 'false')
-                        $('#' + kvp[0]).prop('checked', false);
-                                 
+                    }
+                    else if(kvp[1] == 'true' || kvp[1] == 'false') {
+                        if(kvp[1] == 'true') {
+                            $('#' + kvp[0]).prop('checked', true);
+                        }
+                        else {
+                            $('#' + kvp[0]).prop('checked', false);
+                        }
+                    }
+                    else {
+                        $('#' + kvp[0]).val(kvp[1]);
+                    }
                 }
             }
+            
+            if($('#chkCollapse').prop('checked')) toggleSideBar();
         },
         error: function(xhr, options, err){
             alert('Failed ' + err);

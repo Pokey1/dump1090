@@ -1,1 +1,1 @@
-radLines=contrail&chkCollapse=true&chkSound=true&chkInfo=true&chkLinesRemain=true&
+radLines=contrail&chkCollapse=true&chkSound=true&chkInfo=true&chkLinesRemain=true&ddlMarkerScale=.4&
