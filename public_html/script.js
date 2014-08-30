@@ -57,12 +57,17 @@ function fetchData() {
 function initialize() {
 	// Make a list of all the available map IDs
 	var mapTypeIds = [];
+	
 	for(var type in google.maps.MapTypeId) {
 		mapTypeIds.push(google.maps.MapTypeId[type]);
 	}
+	
+	//roadmap/satellite/hybrid/terrain
+	
 	// Push OSM on to the end
 	mapTypeIds.push("OSM");
 	mapTypeIds.push("dark_map");
+    mapTypeIds.push("light_map");
 
 	// Styled Map to outline airports and highways
 	var styles = [
@@ -95,7 +100,7 @@ function initialize() {
 			"featureType": "landscape",
 			"stylers": [
 				{ "visibility": "on" },
-				{ "weight": 8 },
+				{ "weight": 8 }, 
 				{ "color": "#000000" }
 			]
 		},{
@@ -130,6 +135,73 @@ function initialize() {
 	// Add our styled map
 	var styledMap = new google.maps.StyledMapType(styles, {name: "Dark Map"});
 
+    // Lighter map to outline airports and highways
+	styles = [
+		{
+			"featureType": "administrative",
+			"stylers": [
+				{ "visibility": "off" }
+			]
+		},{
+			"featureType": "landscape",
+			"stylers": [
+				{ "visibility": "off" }
+			]
+		},{
+			"featureType": "poi",
+			"stylers": [
+				{ "visibility": "off" }
+			]
+		},{
+			"featureType": "road",
+			"stylers": [
+				{ "visibility": "off" }
+			]
+		},{
+			"featureType": "transit",
+			"stylers": [
+				{ "visibility": "off" }
+			]
+		},{
+			"featureType": "landscape",
+			"stylers": [
+				{ "visibility": "on" },
+				{ "weight": 8 }, 
+				{ "color": "#E3B76F" }
+			]
+		},{
+			"featureType": "water",
+			"stylers": [
+			{ "lightness": -14 }
+			]
+		},{
+			"featureType": "transit.station.airport",
+			"stylers": [
+				{ "visibility": "on" },
+				{ "weight": 8 },
+				{ "invert_lightness": false },
+				{ "lightness": 0 }
+			]
+		},{
+			"featureType": "road.highway",
+			"stylers": [
+				{ "visibility": "simplified" },
+				{ "invert_lightness": true },
+				{ "lightness": 90 },
+				{ "gamma": .1 }
+			]
+		},{
+			"featureType": "road",
+			"elementType": "labels",
+			"stylers": [
+				{ "visibility": "off" }
+			]
+		}
+	]
+
+	// Add our styled map
+	var lightMap = new google.maps.StyledMapType(styles, {name: "Light Map"});
+
 	// Define the Google Map
 	var mapOptions = {
 		center: new google.maps.LatLng(CenterLat, CenterLon),
@@ -153,6 +225,8 @@ function initialize() {
 	}));
 
 	GoogleMap.mapTypes.set("dark_map", styledMap);
+	
+	GoogleMap.mapTypes.set("light_map", lightMap);
 	
 	// Listeners for newly created Map
     google.maps.event.addListener(GoogleMap, 'center_changed', function() {
